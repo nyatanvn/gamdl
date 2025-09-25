@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAMDL Web Interface</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 0;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .mode-selector {
+            margin-bottom: 30px;
+        }
+        .advanced-options {
+            display: none;
+        }
+        .download-progress {
+            display: none;
+        }
+        .metadata-preview {
+            display: none;
+        }
+        .log-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+        .metadata-item {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+        .metadata-item.album {
+            border-left: 4px solid #007bff;
+        }
+        .metadata-item.playlist {
+            border-left: 4px solid #28a745;
+        }
+        .metadata-item.song {
+            border-left: 4px solid #ffc107;
+        }
+        .metadata-item.artist {
+            border-left: 4px solid #dc3545;
+        }
+        .metadata-item.error {
+            border-left: 4px solid #dc3545;
+            background: #f8d7da;
+        }
+        .track-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            background: white;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+        }
+        .file-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 0.375rem;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .file-upload-area:hover {
+            border-color: #667eea;
+        }
+        .file-upload-area.dragover {
+            border-color: #667eea;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 mb-3">
+                        <i class="fas fa-music me-3"></i>
+                        GAMDL Web Interface
+                    </h1>
+                    <p class="lead mb-4">
+                        Download Apple Music content with an easy-to-use web interface. 
+                        No command line knowledge required!
+                    </p>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <i class="fas fa-download fa-5x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container my-5">
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-bolt fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Basic Mode</h5>
+                            <p class="card-text">Quick and easy downloading with sensible defaults.</p>
+                            <button class="btn btn-primary" onclick="selectMode('basic')">
+                                <i class="fas fa-play me-2"></i>Use Basic Mode
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-cogs fa-3x text-success mb-3"></i>
+                            <h5 class="card-title">Advanced Mode</h5>
+                            <p class="card-text">Full control with all available options and settings.</p>
+                            <button class="btn btn-success" onclick="selectMode('advanced')">
+                                <i class="fas fa-tools me-2"></i>Use Advanced Mode
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Form -->
+        <div id="download-form" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-download me-2"></i>
+                        Download Content
+                        <small class="text-muted ms-2" id="current-mode"></small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- URLs Input -->
+                    <div class="mb-4">
+                        <label for="urls" class="form-label">
+                            <i class="fas fa-link me-2"></i>Apple Music URLs
+                        </label>
+                        <textarea 
+                            class="form-control" 
+                            id="urls" 
+                            rows="4" 
+                            placeholder="Paste Apple Music URLs here (one per line)...&#10;&#10;Examples:&#10;https://music.apple.com/album/...&#10;https://music.apple.com/playlist/...&#10;https://music.apple.com/song/..."
+                            required>
+                        </textarea>
+                        <div class="form-text">Enter one or more Apple Music URLs, each on a separate line.</div>
+                    </div>
+
+                    <!-- Cookies Upload -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="fas fa-cookie me-2"></i>Cookies File (Required)
+                        </label>
+                        <div class="file-upload-area" id="cookies-upload-area">
+                            <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                            <p class="mb-2">Click to upload cookies file or drag & drop</p>
+                            <small class="text-muted">Will be saved as <code>cookies.txt</code> and automatically used for downloads</small>
+                            <input type="file" id="cookies-file" accept=".txt" style="display: none;">
+                        </div>
+                        <div id="cookies-status" class="mt-2"></div>
+                        
+                        <!-- Test Cookies Button -->
+                        <div class="mt-3" id="test-cookies-section" style="display: none;">
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="testCookies()">
+                                <i class="fas fa-vial me-2"></i>Test Cookies Connection
+                            </button>
+                            <small class="text-muted ms-2">Verify cookies work with Apple Music</small>
+                        </div>
+                        
+                        <!-- Test Results -->
+                        <div id="cookies-test-results" class="mt-3" style="display: none;"></div>
+                    </div>
+
+                    <!-- Advanced Options -->
+                    <div class="advanced-options" id="advanced-options">
+                        <h6><i class="fas fa-sliders-h me-2"></i>Advanced Settings</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="language" class="form-label">Language</label>
+                                    <select class="form-select" id="language">
+                                        <option value="">Default</option>
+                                        <option value="en">English</option>
+                                        <option value="es">Spanish</option>
+                                        <option value="fr">French</option>
+                                        <option value="de">German</option>
+                                        <option value="it">Italian</option>
+                                        <option value="pt">Portuguese</option>
+                                        <option value="ja">Japanese</option>
+                                        <option value="ko">Korean</option>
+                                        <option value="zh">Chinese</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="codec-song" class="form-label">Audio Codec</label>
+                                    <select class="form-select" id="codec-song">
+                                        <option value="">Default</option>
+                                        <option value="aac">AAC</option>
+                                        <option value="alac">ALAC</option>
+                                        <option value="atmos">Atmos</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="cover-format" class="form-label">Cover Format</label>
+                                    <select class="form-select" id="cover-format">
+                                        <option value="">Default</option>
+                                        <option value="jpg">JPG</option>
+                                        <option value="png">PNG</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="log-level" class="form-label">Log Level</label>
+                                    <select class="form-select" id="log-level">
+                                        <option value="INFO">Info</option>
+                                        <option value="DEBUG">Debug</option>
+                                        <option value="WARNING">Warning</option>
+                                        <option value="ERROR">Error</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="save-cover">
+                                    <label class="form-check-label" for="save-cover">
+                                        Save cover as separate file
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="save-playlist">
+                                    <label class="form-check-label" for="save-playlist">
+                                        Save playlist as M3U8 file
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="overwrite">
+                                    <label class="form-check-label" for="overwrite">
+                                        Overwrite existing files
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="no-synced-lyrics">
+                                    <label class="form-check-label" for="no-synced-lyrics">
+                                        Don't download synced lyrics
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="synced-lyrics-only">
+                                    <label class="form-check-label" for="synced-lyrics-only">
+                                        Download only synced lyrics
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="disable-music-video-skip">
+                                    <label class="form-check-label" for="disable-music-video-skip">
+                                        Don't skip music videos
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="button" class="btn btn-info" onclick="previewMetadata()">
+                            <i class="fas fa-eye me-2"></i>Preview Content
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="confirmDownload()" disabled id="download-btn">
+                            <i class="fas fa-download me-2"></i>Start Download
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                            <i class="fas fa-undo me-2"></i>Reset
+                        </button>
+                        <button type="button" class="btn btn-info" onclick="viewDownloads()">
+                            <i class="fas fa-list me-2"></i>View Downloads
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metadata Preview -->
+        <div class="metadata-preview" id="metadata-preview" style="display: none;">
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Content Preview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="metadata-content">
+                        <!-- Metadata will be loaded here -->
+                    </div>
+                    
+                    <!-- Save Location -->
+                    <div class="mt-4">
+                        <label for="save-location" class="form-label">
+                            <i class="fas fa-folder me-2"></i>Save Location
+                        </label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="save-location" 
+                                   placeholder="Enter download path or leave empty for default" 
+                                   value="">
+                            <button class="btn btn-outline-secondary" type="button" onclick="selectDownloadFolder()" id="browse-btn">
+                                <i class="fas fa-folder-open"></i> Browse
+                            </button>
+                            <button class="btn btn-outline-info" type="button" onclick="useDefaultLocation()">
+                                <i class="fas fa-home"></i> Default
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            <div class="d-flex flex-column gap-1">
+                                <span><strong>Default:</strong> ./downloads/ (relative to current directory)</span>
+                                <span><strong>Current working directory:</strong> <code id="current-directory">Loading...</code></span>
+                                <span class="text-muted small">💡 Tip: Use absolute paths like /Users/username/Music for best results</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Path Suggestions -->
+                        <div class="mt-2">
+                            <small class="text-muted">Quick suggestions:</small>
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setSuggestedPath('./downloads')">
+                                    <i class="fas fa-download"></i> ./downloads
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setSuggestedPath('~/Music')">
+                                    <i class="fas fa-music"></i> ~/Music
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setSuggestedPath('~/Downloads')">
+                                    <i class="fas fa-folder-open"></i> ~/Downloads
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setSuggestedPath('/tmp/gamdl')">
+                                    <i class="fas fa-folder"></i> /tmp/gamdl
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Path validation -->
+                        <div id="path-validation" class="mt-2" style="display: none;"></div>
+                    </div>
+                    
+                    <!-- Confirm Download -->
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="button" class="btn btn-success" onclick="confirmDownload()">
+                            <i class="fas fa-check me-2"></i>Confirm Download
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="hideMetadataPreview()">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Progress -->
+        <div class="download-progress" id="download-progress">
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        Download in Progress
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Status:</strong> 
+                        <span class="badge bg-primary status-badge" id="download-status">Starting...</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Download ID:</strong> 
+                        <code id="download-id"></code>
+                    </div>
+                    <div class="mb-3" id="download-folder-info" style="display: none;">
+                        <strong>Save Location:</strong> 
+                        <div class="text-break small text-success mt-1">
+                            <i class="fas fa-folder me-1"></i>
+                            <span id="download-folder"></span>
+                        </div>
+                        <small class="text-muted">Files are being saved directly to this folder as they complete</small>
+                    </div>
+                    
+                    <!-- Progress Information -->
+                    <div class="mb-3" id="progress-info" style="display: none;">
+                        <strong>Progress:</strong>
+                        <div class="mt-2">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Tracks: <span id="progress-tracks">0/0</span></span>
+                                <span class="text-muted" id="progress-percentage">0%</span>
+                            </div>
+                            <div class="progress mb-2">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: 0%" id="progress-bar" 
+                                     aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                            <div class="text-muted small" id="current-track">
+                                Initializing...
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Command:</strong>
+                        <div class="log-output p-2 mt-2">
+                            <code id="download-command"></code>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Live Output:</strong>
+                        <div class="log-output p-2" id="download-output">
+                            <div class="text-muted">Waiting for output...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Tips -->
+                    <div class="mt-3" id="performance-tips" style="display: none;">
+                        <div class="alert alert-info py-2">
+                            <h6 class="mb-2"><i class="fas fa-lightbulb me-2"></i>Download Taking Too Long?</h6>
+                            <ul class="mb-0 small">
+                                <li>Check your internet connection speed</li>
+                                <li>Ensure Apple Music cookies are valid and recent</li>
+                                <li>Try downloading during off-peak hours</li>
+                                <li>Close bandwidth-heavy applications</li>
+                                <li>For large albums, downloads may take 2-5 minutes per song</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Downloads List -->
+        <div class="downloads-list" id="downloads-list" style="display: none;">
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Download History
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="downloads-content">
+                        <!-- Downloads will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentMode = 'basic';
+        let currentDownloadId = null;
+        let cookiesFilePath = null;
+        let statusCheckInterval = null;
+        let metadataCache = null;
+        let systemInfo = null;
+
+        // Load system information on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadSystemInfo();
+            checkSystemDependencies();
+        });
+
+        function loadSystemInfo() {
+            fetch('/system-info')
+            .then(response => response.json())
+            .then(data => {
+                systemInfo = data;
+                document.getElementById('current-directory').textContent = data.current_directory || 'Unknown';
+                updatePathSuggestions(data.suggested_paths || []);
+            })
+            .catch(error => {
+                console.error('Error loading system info:', error);
+                document.getElementById('current-directory').textContent = 'Unable to load';
+            });
+        }
+
+        function checkSystemDependencies() {
+            fetch('/check-dependencies')
+            .then(response => response.json())
+            .then(data => {
+                if (data.recommendations && data.recommendations.length > 0) {
+                    showDependencyWarnings(data);
+                }
+            })
+            .catch(error => {
+                console.error('Error checking dependencies:', error);
+            });
+        }
+
+        function showDependencyWarnings(depData) {
+            // Create a system status alert if there are issues
+            let warningHtml = `
+                <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>System Dependencies</h6>
+                    <ul class="mb-2">
+            `;
+            
+            depData.recommendations.forEach(rec => {
+                warningHtml += `<li>${rec}</li>`;
+            });
+            
+            warningHtml += `
+                    </ul>
+                    <small class="text-muted">These issues may cause slow downloads or failures.</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            // Insert after the hero section
+            const heroSection = document.querySelector('.hero-section');
+            if (heroSection && heroSection.nextElementSibling) {
+                heroSection.insertAdjacentHTML('afterend', warningHtml);
+            }
+        }
+
+        function updatePathSuggestions(suggestedPaths) {
+            // Update the quick suggestions based on system info
+            const container = document.querySelector('.d-flex.flex-wrap.gap-1.mt-1');
+            if (container && suggestedPaths.length > 0) {
+                container.innerHTML = '';
+                
+                suggestedPaths.forEach(pathInfo => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'btn btn-sm btn-outline-secondary';
+                    button.onclick = () => setSuggestedPath(pathInfo.path);
+                    
+                    // Choose appropriate icon
+                    let icon = 'fas fa-folder';
+                    if (pathInfo.path.includes('Music')) icon = 'fas fa-music';
+                    else if (pathInfo.path.includes('Downloads')) icon = 'fas fa-folder-open';
+                    else if (pathInfo.path.includes('Desktop')) icon = 'fas fa-desktop';
+                    else if (pathInfo.path.includes('downloads')) icon = 'fas fa-download';
+                    
+                    button.innerHTML = `<i class="${icon}"></i> ${pathInfo.path}`;
+                    button.title = pathInfo.name;
+                    
+                    container.appendChild(button);
+                });
+            }
+        }
+
+        function selectMode(mode) {
+            currentMode = mode;
+            document.getElementById('download-form').style.display = 'block';
+            document.getElementById('current-mode').textContent = `(${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode)`;
+            
+            if (mode === 'advanced') {
+                document.getElementById('advanced-options').style.display = 'block';
+            } else {
+                document.getElementById('advanced-options').style.display = 'none';
+            }
+            
+            // Scroll to form
+            document.getElementById('download-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function previewMetadata() {
+            const urls = document.getElementById('urls').value.trim();
+            
+            if (!urls) {
+                alert('Please enter at least one URL');
+                return;
+            }
+            
+            const data = {
+                urls: urls,
+                cookies_path: cookiesFilePath
+            };
+            
+            // Show loading state
+            document.getElementById('metadata-preview').style.display = 'block';
+            document.getElementById('metadata-content').innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+                    <p>Fetching content information...</p>
+                </div>
+            `;
+            document.getElementById('metadata-preview').scrollIntoView({ behavior: 'smooth' });
+            
+            fetch('/preview', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('metadata-content').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            ${data.error}
+                        </div>
+                    `;
+                } else {
+                    metadataCache = data;
+                    displayMetadata(data);
+                    document.getElementById('download-btn').disabled = false;
+                }
+            })
+            .catch(error => {
+                document.getElementById('metadata-content').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error: ${error}
+                    </div>
+                `;
+            });
+        }
+
+        function displayMetadata(data) {
+            let html = `
+                <div class="alert alert-info">
+                    <strong><i class="fas fa-info-circle me-2"></i>Content Summary:</strong>
+                    Found ${data.metadata.length} item(s) with ${calculateTotalTracks(data.metadata)} track(s)
+                </div>
+            `;
+            
+            data.metadata.forEach((item, index) => {
+                const typeIcon = {
+                    'album': 'fas fa-compact-disc',
+                    'playlist': 'fas fa-list-music',
+                    'song': 'fas fa-music',
+                    'artist': 'fas fa-user-music',
+                    'unknown': 'fas fa-question-circle',
+                    'error': 'fas fa-exclamation-triangle'
+                };
+                
+                html += `
+                    <div class="metadata-item ${item.type}">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="${typeIcon[item.type] || typeIcon.unknown} fa-lg me-3 text-primary"></i>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">${escapeHtml(item.title)}</h6>
+                                <small class="text-muted">
+                                    ${item.type.toUpperCase()}
+                                    ${item.artist ? ' • ' + escapeHtml(item.artist) : ''}
+                                    ${item.curator ? ' • by ' + escapeHtml(item.curator) : ''}
+                                    • ID: ${item.id}
+                                    ${item.actual_tracks !== undefined ? 
+                                        ` • ${item.actual_tracks} track(s)` : 
+                                        ` • ~${item.estimated_tracks} track(s)`}
+                                    ${item.total_duration ? ' • ' + item.total_duration : ''}
+                                </small>
+                            </div>
+                        </div>
+                        
+                        ${item.genre ? `<div class="small text-muted mb-2"><i class="fas fa-tag me-1"></i>Genre: ${escapeHtml(item.genre)}</div>` : ''}
+                        ${item.release_date ? `<div class="small text-muted mb-2"><i class="fas fa-calendar me-1"></i>Released: ${item.release_date}</div>` : ''}
+                        ${item.description ? `<div class="small text-muted mb-2"><i class="fas fa-info me-1"></i>${escapeHtml(item.description)}</div>` : ''}
+                        ${item.note ? `<div class="small text-warning mb-2"><i class="fas fa-exclamation-circle me-1"></i>${escapeHtml(item.note)}</div>` : ''}
+                        ${item.error ? `<div class="small text-danger mb-2"><i class="fas fa-exclamation-triangle me-1"></i>${escapeHtml(item.error)}</div>` : ''}
+                        
+                        ${item.tracks && item.tracks.length > 0 ? `
+                            <div class="mt-3">
+                                <h6 class="small text-muted mb-2">
+                                    <i class="fas fa-list me-1"></i>
+                                    Track Preview ${item.has_more_tracks ? `(showing first ${item.tracks.length})` : ''}:
+                                </h6>
+                                <div class="track-list">
+                                    ${item.tracks.map((track, i) => `
+                                        <div class="d-flex justify-content-between align-items-center py-1 px-2 ${i % 2 === 0 ? 'bg-light' : ''}" style="font-size: 0.85rem;">
+                                            <div class="flex-grow-1">
+                                                <span class="fw-bold">${escapeHtml(track.name)}</span>
+                                                ${track.artist && item.type === 'playlist' ? 
+                                                    ` • <span class="text-muted">${escapeHtml(track.artist)}</span>` : ''}
+                                                ${track.album && item.type === 'playlist' ? 
+                                                    ` • <span class="text-muted small">${escapeHtml(track.album)}</span>` : ''}
+                                            </div>
+                                            <div class="text-muted small">
+                                                ${track.track_number ? `#${track.track_number} • ` : ''}
+                                                ${track.duration || '0:00'}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                ${item.has_more_tracks ? `<div class="small text-muted mt-2">... and ${item.actual_tracks - item.tracks.length} more tracks</div>` : ''}
+                            </div>
+                        ` : ''}
+                        
+                        <div class="small text-muted mt-2">
+                            <i class="fas fa-link me-1"></i>
+                            <a href="${item.url}" target="_blank" class="text-decoration-none">
+                                ${item.url.length > 60 ? item.url.substring(0, 60) + '...' : item.url}
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('metadata-content').innerHTML = html;
+        }
+
+        function calculateTotalTracks(metadata) {
+            return metadata.reduce((total, item) => {
+                if (item.actual_tracks !== undefined) {
+                    return total + (typeof item.actual_tracks === 'number' ? item.actual_tracks : 0);
+                } else if (typeof item.estimated_tracks === 'number') {
+                    return total + item.estimated_tracks;
+                } else {
+                    return total + 1; // Default to 1 if unknown
+                }
+            }, 0);
+        }
+
+        function hideMetadataPreview() {
+            document.getElementById('metadata-preview').style.display = 'none';
+            document.getElementById('download-btn').disabled = true;
+            metadataCache = null;
+        }
+
+        function selectDownloadFolder() {
+            // Check if the browser supports the File System Access API
+            if ('showDirectoryPicker' in window) {
+                // Modern browsers with File System Access API
+                showDirectoryPicker()
+                .then(dirHandle => {
+                    // We can't get the full path directly for security reasons,
+                    // but we can at least show the folder name
+                    document.getElementById('save-location').value = `[Selected: ${dirHandle.name}]`;
+                    document.getElementById('save-location').dataset.dirHandle = JSON.stringify(dirHandle);
+                    
+                    showPathValidation('success', `✓ Selected folder: ${dirHandle.name} (Modern browser folder picker)`);
+                })
+                .catch(error => {
+                    if (error.name !== 'AbortError') {
+                        console.error('Error selecting directory:', error);
+                        showPathValidation('warning', 'Could not access directory. Please type the path manually.');
+                    }
+                });
+            } else {
+                // Fallback for browsers without File System Access API
+                showBrowserLimitationDialog();
+            }
+        }
+
+        function showBrowserLimitationDialog() {
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Browser Folder Selection
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-exclamation-triangle me-2"></i>Browser Limitation</h6>
+                                <p class="mb-2">Your browser doesn't support direct folder selection for security reasons. You have these options:</p>
+                                <ul class="mb-3">
+                                    <li><strong>Type the path manually</strong> in the input field above</li>
+                                    <li><strong>Use suggested paths</strong> like ~/Music or ~/Downloads</li>
+                                    <li><strong>Leave empty</strong> to use the default location (./downloads)</li>
+                                </ul>
+                            </div>
+                            
+                            <h6>Common Path Examples:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>macOS:</strong>
+                                    <ul class="small">
+                                        <li><code>/Users/username/Music</code></li>
+                                        <li><code>/Users/username/Downloads</code></li>
+                                        <li><code>~/Music</code></li>
+                                        <li><code>~/Downloads</code></li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Windows:</strong>
+                                    <ul class="small">
+                                        <li><code>C:\\Users\\username\\Music</code></li>
+                                        <li><code>C:\\Users\\username\\Downloads</code></li>
+                                        <li><code>%USERPROFILE%\\Music</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <strong>Linux:</strong>
+                                <ul class="small">
+                                    <li><code>/home/username/Music</code></li>
+                                    <li><code>/home/username/Downloads</code></li>
+                                    <li><code>~/Music</code></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                                <i class="fas fa-check me-2"></i>Got it
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+            
+            // Remove modal from DOM when hidden
+            modal.addEventListener('hidden.bs.modal', () => {
+                document.body.removeChild(modal);
+            });
+        }
+
+        function useDefaultLocation() {
+            document.getElementById('save-location').value = '';
+            document.getElementById('save-location').removeAttribute('data-dir-handle');
+            showPathValidation('info', '✓ Using default location: ./downloads/');
+        }
+
+        function setSuggestedPath(path) {
+            document.getElementById('save-location').value = path;
+            document.getElementById('save-location').removeAttribute('data-dir-handle');
+            validatePath(path);
+        }
+
+        function showPathValidation(type, message) {
+            const validationDiv = document.getElementById('path-validation');
+            validationDiv.style.display = 'block';
+            
+            const alertClass = {
+                'success': 'alert-success',
+                'warning': 'alert-warning', 
+                'danger': 'alert-danger',
+                'info': 'alert-info'
+            };
+            
+            validationDiv.innerHTML = `
+                <div class="alert ${alertClass[type] || 'alert-info'} alert-dismissible fade show py-2">
+                    ${message}
+                    <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+
+        function validatePath(path) {
+            if (!path || path.trim() === '') {
+                showPathValidation('info', '✓ Using default location: ./downloads/');
+                return;
+            }
+            
+            // Basic path validation
+            const invalidChars = /[<>"|*?]/;
+            if (invalidChars.test(path)) {
+                showPathValidation('danger', '❌ Path contains invalid characters: < > " | * ?');
+                return;
+            }
+            
+            // Check for common path patterns
+            if (path.startsWith('~')) {
+                showPathValidation('success', '✓ Home directory path - will be expanded by the system');
+            } else if (path.startsWith('/') || path.match(/^[A-Za-z]:/)) {
+                showPathValidation('success', '✓ Absolute path detected');
+            } else if (path.startsWith('./')) {
+                showPathValidation('info', '✓ Relative path - will be created relative to the application directory');
+            } else {
+                showPathValidation('warning', '⚠️ Relative path - consider using an absolute path for clarity');
+            }
+        }
+
+        // Add real-time path validation
+        document.getElementById('save-location').addEventListener('input', function(e) {
+            const path = e.target.value;
+            if (path) {
+                validatePath(path);
+            } else {
+                document.getElementById('path-validation').style.display = 'none';
+            }
+        });
+
+        function confirmDownload() {
+            const customPath = document.getElementById('save-location').value.trim();
+            
+            if (!metadataCache) {
+                alert('Please preview the content first');
+                return;
+            }
+            
+            startDownload(customPath);
+        }
+
+        // File upload handling
+        document.getElementById('cookies-upload-area').addEventListener('click', function() {
+            document.getElementById('cookies-file').click();
+        });
+
+        document.getElementById('cookies-file').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                uploadCookiesFile(e.target.files[0]);
+            }
+        });
+
+        // Drag and drop handling
+        document.getElementById('cookies-upload-area').addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        document.getElementById('cookies-upload-area').addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+
+        document.getElementById('cookies-upload-area').addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length > 0) {
+                uploadCookiesFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        function uploadCookiesFile(file) {
+            const formData = new FormData();
+            formData.append('cookies_file', file);
+            
+            const statusDiv = document.getElementById('cookies-status');
+            statusDiv.innerHTML = '<div class="text-info"><i class="fas fa-spinner fa-spin me-2"></i>Uploading...</div>';
+            
+            fetch('/upload_cookies', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    statusDiv.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>${data.error}</div>`;
+                    document.getElementById('test-cookies-section').style.display = 'none';
+                } else {
+                    cookiesFilePath = data.filepath;
+                    statusDiv.innerHTML = `<div class="text-success"><i class="fas fa-check me-2"></i>Cookies file uploaded successfully</div>`;
+                    document.getElementById('test-cookies-section').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                statusDiv.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Upload failed: ${error}</div>`;
+                document.getElementById('test-cookies-section').style.display = 'none';
+            });
+        }
+
+        function testCookies() {
+            const resultsDiv = document.getElementById('cookies-test-results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-vial me-2"></i>Testing Apple Music Connection
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center py-3">
+                            <i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+                            <p>Testing cookies and Apple Music connectivity...</p>
+                            <small class="text-muted">This may take a few seconds</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            fetch('/test-cookies', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})  // No cookies_path needed, will use cookies.txt
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayCookieTestResults(data);
+            })
+            .catch(error => {
+                resultsDiv.innerHTML = `
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Test failed: ${error}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function displayCookieTestResults(data) {
+            const resultsDiv = document.getElementById('cookies-test-results');
+            
+            // Determine overall status color
+            let statusClass = 'danger';
+            let statusIcon = 'fas fa-times-circle';
+            let statusText = 'Failed';
+            
+            if (data.overall_status === 'excellent') {
+                statusClass = 'success';
+                statusIcon = 'fas fa-check-circle';
+                statusText = 'Excellent';
+            } else if (data.overall_status === 'good') {
+                statusClass = 'warning';
+                statusIcon = 'fas fa-exclamation-circle';
+                statusText = 'Good';
+            }
+            
+            let html = `
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-vial me-2"></i>Apple Music Connection Test Results
+                            <span class="badge bg-${statusClass} ms-2">
+                                <i class="${statusIcon} me-1"></i>${statusText}
+                            </span>
+                        </h6>
+                    </div>
+                    <div class="card-body">
+            `;
+            
+            // User info section
+            if (data.user_info && Object.keys(data.user_info).length > 0) {
+                html += `
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-user me-2"></i>Account Information</h6>
+                        <p class="mb-0">
+                            <strong>Storefront:</strong> ${data.user_info.name || 'Unknown'} (${data.user_info.storefront || 'Unknown'})
+                        </p>
+                    </div>
+                `;
+            }
+            
+            // Test results
+            html += `<h6><i class="fas fa-list me-2"></i>Test Results:</h6><ul class="list-unstyled">`;
+            
+            if (data.test_results && data.test_results.length > 0) {
+                data.test_results.forEach(result => {
+                    html += `<li class="mb-1">${result}</li>`;
+                });
+            } else {
+                html += `<li>No test results available</li>`;
+            }
+            
+            html += `</ul>`;
+            
+            // Recommendations
+            if (data.recommendations && data.recommendations.length > 0) {
+                html += `
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-lightbulb me-2"></i>Recommendations:</h6>
+                        <ul class="mb-0">
+                `;
+                data.recommendations.forEach(rec => {
+                    html += `<li>${rec}</li>`;
+                });
+                html += `</ul></div>`;
+            }
+            
+            // Status summary
+            html += `
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <strong>Summary:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Cookies Valid: ${data.cookies_valid ? '✅ Yes' : '❌ No'}</li>
+                                <li>Apple Music Connected: ${data.apple_music_connected ? '✅ Yes' : '❌ No'}</li>
+                                <li>Authentication Status: ${data.authentication_status || 'Unknown'}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        function startDownload(customPath = null) {
+            const urls = document.getElementById('urls').value.trim();
+            
+            if (!urls) {
+                alert('Please enter at least one URL');
+                return;
+            }
+            
+            // If no customPath provided, get it from the save location input
+            if (!customPath) {
+                customPath = document.getElementById('save-location').value.trim();
+            }
+            
+            const data = {
+                urls: urls,
+                mode: currentMode
+            };
+            
+            if (currentMode === 'advanced') {
+                data.cookies_path = cookiesFilePath;
+                data.language = document.getElementById('language').value;
+                data.codec_song = document.getElementById('codec-song').value;
+                data.cover_format = document.getElementById('cover-format').value;
+                data.log_level = document.getElementById('log-level').value;
+                data.save_cover = document.getElementById('save-cover').checked;
+                data.save_playlist = document.getElementById('save-playlist').checked;
+                data.overwrite = document.getElementById('overwrite').checked;
+                data.no_synced_lyrics = document.getElementById('no-synced-lyrics').checked;
+                data.synced_lyrics_only = document.getElementById('synced-lyrics-only').checked;
+                data.disable_music_video_skip = document.getElementById('disable-music-video-skip').checked;
+            } else {
+                data.cookies_path = cookiesFilePath;
+            }
+            
+            // Add custom output path if specified
+            if (customPath) {
+                data.output_path = customPath;
+            }
+            
+            fetch('/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                } else {
+                    currentDownloadId = data.download_id;
+                    showDownloadProgress(data.download_id, data.download_folder);
+                    startStatusCheck(data.download_id);
+                    hideMetadataPreview();
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
+        }
+
+        function showDownloadProgress(downloadId, downloadFolder = null) {
+            document.getElementById('download-progress').style.display = 'block';
+            document.getElementById('download-id').textContent = downloadId;
+            document.getElementById('download-status').textContent = 'Starting...';
+            document.getElementById('download-command').textContent = 'Loading...';
+            document.getElementById('download-output').innerHTML = '<div class="text-muted">Waiting for output...</div>';
+            document.getElementById('progress-info').style.display = 'none';
+            
+            // Show download folder if provided
+            if (downloadFolder) {
+                document.getElementById('download-folder').textContent = downloadFolder;
+                document.getElementById('download-folder-info').style.display = 'block';
+            }
+            
+            // Reset progress elements
+            document.getElementById('progress-tracks').textContent = '0/0';
+            document.getElementById('progress-percentage').textContent = '0%';
+            document.getElementById('progress-bar').style.width = '0%';
+            document.getElementById('current-track').textContent = 'Initializing...';
+            
+            // Scroll to progress
+            document.getElementById('download-progress').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function startStatusCheck(downloadId) {
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+            
+            let checkCount = 0;
+            statusCheckInterval = setInterval(() => {
+                checkDownloadStatus(downloadId);
+                checkCount++;
+                
+                // Show performance tips after 30 seconds (15 checks * 2s interval)
+                if (checkCount === 15) {
+                    document.getElementById('performance-tips').style.display = 'block';
+                }
+            }, 2000);
+        }
+
+        function checkDownloadStatus(downloadId) {
+            fetch(`/status/${downloadId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    clearInterval(statusCheckInterval);
+                    document.getElementById('download-status').textContent = 'Error';
+                    document.getElementById('download-status').className = 'badge bg-danger status-badge';
+                    return;
+                }
+                
+                const status = data.status;
+                const details = data.details;
+                const progress = data.progress || {};
+                const downloadFolder = data.download_folder;
+                
+                // Show download folder info
+                if (downloadFolder && downloadFolder !== 'Unknown') {
+                    document.getElementById('download-folder').textContent = downloadFolder;
+                    document.getElementById('download-folder-info').style.display = 'block';
+                }
+                
+                // Update progress information
+                if (progress.total_tracks > 0 || progress.completed_tracks > 0) {
+                    document.getElementById('progress-info').style.display = 'block';
+                    document.getElementById('progress-tracks').textContent = `${progress.completed_tracks || 0}/${progress.total_tracks || 0}`;
+                    
+                    const percentage = progress.total_tracks > 0 ? 
+                        Math.round((progress.completed_tracks || 0) / progress.total_tracks * 100) : 0;
+                    document.getElementById('progress-percentage').textContent = `${percentage}%`;
+                    document.getElementById('progress-bar').style.width = `${percentage}%`;
+                    document.getElementById('progress-bar').setAttribute('aria-valuenow', percentage);
+                }
+                
+                if (progress.current_track) {
+                    document.getElementById('current-track').textContent = progress.current_track;
+                }
+                
+                // Update live output
+                if (progress.output_lines && progress.output_lines.length > 0) {
+                    const output = progress.output_lines.join('\n');
+                    document.getElementById('download-output').innerHTML = 
+                        `<pre class="mb-0">${escapeHtml(output)}</pre>`;
+                    
+                    // Auto-scroll to bottom
+                    const outputDiv = document.getElementById('download-output');
+                    outputDiv.scrollTop = outputDiv.scrollHeight;
+                }
+                
+                if (status === 'running') {
+                    document.getElementById('download-status').textContent = 'Running';
+                    document.getElementById('download-status').className = 'badge bg-primary status-badge';
+                    if (details.command) {
+                        document.getElementById('download-command').textContent = details.command;
+                    }
+                } else if (status === 'completed') {
+                    clearInterval(statusCheckInterval);
+                    if (details.status === 'completed') {
+                        document.getElementById('download-status').textContent = 'Completed';
+                        document.getElementById('download-status').className = 'badge bg-success status-badge';
+                    } else {
+                        document.getElementById('download-status').textContent = 'Failed';
+                        document.getElementById('download-status').className = 'badge bg-danger status-badge';
+                    }
+                    
+                    if (details.command) {
+                        document.getElementById('download-command').textContent = details.command;
+                    }
+                    
+                    let output = '';
+                    if (details.stdout) {
+                        output += details.stdout;
+                    }
+                    if (details.stderr) {
+                        output += '\n--- ERRORS ---\n' + details.stderr;
+                    }
+                    if (details.error) {
+                        output += '\n--- ERROR ---\n' + details.error;
+                    }
+                    
+                    if (output) {
+                        document.getElementById('download-output').innerHTML = 
+                            `<pre class="mb-0">${escapeHtml(output)}</pre>`;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error checking status:', error);
+            });
+        }
+
+        function viewDownloads() {
+            fetch('/downloads')
+            .then(response => response.json())
+            .then(data => {
+                const downloadsDiv = document.getElementById('downloads-content');
+                const downloadsList = document.getElementById('downloads-list');
+                
+                if (data.downloads && data.downloads.length > 0) {
+                    let html = '';
+                    data.downloads.forEach(download => {
+                        const statusClass = download.status === 'running' ? 'primary' : 
+                                          download.details.status === 'completed' ? 'success' : 'danger';
+                        
+                        html += `
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="card-title">
+                                                Download ${download.id.substring(0, 8)}...
+                                                <span class="badge bg-${statusClass} ms-2">${download.status}</span>
+                                            </h6>
+                                            <p class="card-text">
+                                                <strong>Command:</strong><br>
+                                                <code>${download.details.command || 'N/A'}</code>
+                                            </p>
+                                        </div>
+                                        <small class="text-muted">
+                                            ${download.details.start_time ? 
+                                                new Date(download.details.start_time * 1000).toLocaleString() : 
+                                                'Unknown time'}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    downloadsDiv.innerHTML = html;
+                } else {
+                    downloadsDiv.innerHTML = '<div class="text-muted">No downloads found</div>';
+                }
+                
+                downloadsList.style.display = 'block';
+                downloadsList.scrollIntoView({ behavior: 'smooth' });
+            })
+            .catch(error => {
+                console.error('Error loading downloads:', error);
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('urls').value = '';
+            document.getElementById('cookies-status').innerHTML = '';
+            cookiesFilePath = null;
+            metadataCache = null;
+            document.getElementById('download-btn').disabled = true;
+            
+            // Reset advanced options
+            document.getElementById('language').value = '';
+            document.getElementById('codec-song').value = '';
+            document.getElementById('cover-format').value = '';
+            document.getElementById('log-level').value = 'INFO';
+            document.getElementById('save-cover').checked = false;
+            document.getElementById('save-playlist').checked = false;
+            document.getElementById('overwrite').checked = false;
+            document.getElementById('no-synced-lyrics').checked = false;
+            document.getElementById('synced-lyrics-only').checked = false;
+            document.getElementById('disable-music-video-skip').checked = false;
+            
+            // Reset save location
+            document.getElementById('save-location').value = '';
+            
+            // Hide progress and downloads
+            document.getElementById('download-progress').style.display = 'none';
+            document.getElementById('downloads-list').style.display = 'none';
+            document.getElementById('metadata-preview').style.display = 'none';
+            
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

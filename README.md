@@ -38,17 +38,81 @@ The following tools are optional but required for specific features. Add them to
    pip install gamdl
    ```
 
-2. Set up the cookies file.
+2. For web interface usage, install additional dependencies:
+
+   ```bash
+   pip install -r web_requirements.txt
+   ```
+
+3. Set up the cookies file.
    - Move the cookies file to the directory where you'll run Gamdl and rename it to `cookies.txt`.
    - Alternatively, specify the path to the cookies file using command-line arguments or the config file.
 
+## Quick Start (After GitHub Clone)
+
+After cloning this repository from GitHub, you can quickly start the web interface using one of the provided startup scripts:
+
+### Option 1: Shell Script (Recommended for macOS/Linux)
+```bash
+./start.sh
+```
+
+### Option 2: Python Script (Cross-platform)
+```bash
+python3 start.py
+```
+
+Both scripts will:
+- Set up a virtual environment (if needed)
+- Install required dependencies
+- Create necessary directories
+- Check for cookies file
+- Start the web interface at `http://localhost:5000`
+
 ## Usage
+
+### Command Line Interface
 
 Run Gamdl with the following command:
 
 ```bash
 gamdl [OPTIONS] URLS...
 ```
+
+### Web Interface
+
+For a user-friendly web interface, run:
+
+```bash
+python web_app.py
+```
+
+Then open your browser to `http://localhost:5000`
+
+#### Web Interface Features
+
+- **User-Friendly GUI**: Easy-to-use web interface with drag & drop functionality
+- **Real-Time Progress**: Live download progress tracking with detailed status updates
+- **Cookie Management**: Upload and test Apple Music cookies with automatic validation
+- **Instant Folder Creation**: Downloads organized into timestamped folders immediately
+- **Live File Saving**: Songs saved in real-time as they complete
+- **Basic & Advanced Modes**:
+  - **Basic Mode**: Simplified interface with sensible defaults
+  - **Advanced Mode**: Full control over all download options
+- **Dependency Checking**: Automatic system dependency verification
+- **Apple Music Connectivity Testing**: Comprehensive cookie and API validation
+- **Metadata Preview**: View song/album information before downloading
+- **Download Management**: Track multiple downloads simultaneously
+
+#### Using the Web Interface
+
+1. **Upload Cookies**: Drag and drop your Apple Music cookies file (automatically saved as `cookies.txt`)
+2. **Test Connection**: Use the "Test Cookies" feature to verify Apple Music connectivity
+3. **Paste URLs**: Add Apple Music URLs (songs, albums, playlists, artists)
+4. **Preview**: Click "Get Preview" to see what will be downloaded
+5. **Configure**: Choose basic or advanced mode and set your preferences
+6. **Download**: Click "Start Download" and watch real-time progress
+7. **Monitor**: View live logs and download status in the web interface
 
 ### Supported URL types
 

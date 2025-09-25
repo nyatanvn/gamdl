@@ -1,7 +1,69 @@
-/*
-__pycache__
-!gamdl
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Application specific
+uploads/
+downloads/
+cookies.txt
+*.log
+*.tmp
+
+# Web app temporary files
+web_temp/
+temp/
+
+# Test files
+test_*.py
+*_test.py
+diagnostic.py
+
+# Only include these essential files
+!gamdl/
 !.gitignore
 !pyproject.toml
 !README.md
 !requirements.txt
+!web_requirements.txt
+!web_app.py
+!templates/
+!LICENSE

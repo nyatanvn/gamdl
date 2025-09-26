@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAMDL Web Interface - Apple Music Downloader</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <meta name="description" content="Download Apple Music content with an easy-to-use web interface. No command line knowledge required!">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 0;
+            min-height: 60vh;
+            display: flex;
+            align-items: center;
+        }
+        .demo-screenshot {
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 100%;
+            height: auto;
+        }
+        .feature-card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            margin-bottom: 30px;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        .live-demo-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .live-demo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-music me-2"></i>
+                GAMDL Web
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#demo">Demo</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#installation">Installation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/nyatanvn/gamdl" target="_blank">
+                            <i class="fab fa-github me-1"></i>GitHub
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">
+                        <i class="fas fa-music me-3"></i>
+                        GAMDL Web Interface
+                    </h1>
+                    <p class="lead mb-4">
+                        Download Apple Music songs, albums, playlists, and music videos with a beautiful,
+                        user-friendly web interface. No command line knowledge required!
+                    </p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="#live-demo" class="btn btn-light btn-lg live-demo-btn">
+                            <i class="fas fa-play-circle me-2"></i>Try Live Demo
+                        </a>
+                        <a href="https://github.com/nyatanvn/gamdl" class="btn btn-outline-light btn-lg" target="_blank">
+                            <i class="fab fa-github me-2"></i>View on GitHub
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <img src="https://via.placeholder.com/600x400/667eea/ffffff?text=GAMDL+Web+Interface" alt="GAMDL Web Interface Screenshot" class="demo-screenshot">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-5">
+                    <h2 class="display-5 fw-bold">Powerful Features</h2>
+                    <p class="lead text-muted">Everything you need for downloading Apple Music content</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-bolt fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Easy to Use</h5>
+                            <p class="card-text">Simple drag-and-drop interface with sensible defaults. No technical knowledge required.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-music fa-3x text-success mb-3"></i>
+                            <h5 class="card-title">High Quality</h5>
+                            <p class="card-text">Download songs in AAC 256kbps, music videos in up to 4K resolution, and synced lyrics.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <i class="fas fa-users fa-3x text-info mb-3"></i>
+                        <h5 class="card-title">Artist Support</h5>
+                        <p class="card-text">Download entire artist discographies. Choose between albums or music videos with the web interface.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clock fa-3x text-warning mb-3"></i>
+                            <h5 class="card-title">Real-time Progress</h5>
+                            <p class="card-text">Live download progress tracking with detailed status updates and logs.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-shield-alt fa-3x text-danger mb-3"></i>
+                            <h5 class="card-title">Secure & Private</h5>
+                            <p class="card-text">Your cookies and downloads stay on your device. No data sent to external servers.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-cogs fa-3x text-secondary mb-3"></i>
+                            <h5 class="card-title">Advanced Options</h5>
+                            <p class="card-text">Full control with advanced settings for power users, plus basic mode for simplicity.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-5">
+                    <h2 class="display-5 fw-bold">See It In Action</h2>
+                    <p class="lead text-muted">Experience the intuitive web interface</p>
+                </div>
+            </div>
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h3>How It Works</h3>
+                    <ol class="list-group list-group-numbered">
+                        <li class="list-group-item d-flex align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Upload Cookies</div>
+                                Drag & drop your Apple Music cookies file or paste Apple Music URLs
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Preview Content</div>
+                                See exactly what will be downloaded with metadata and track lists
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Choose Options</div>
+                                Select basic or advanced mode, choose download location
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Download</div>
+                                Watch real-time progress as your music downloads
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Supported Content Types</h5>
+                            <div class="row">
+                                <div class="col-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success me-2"></i>Songs</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Albums</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Playlists</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Artists</li>
+                                    </ul>
+                                </div>
+                                <div class="col-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success me-2"></i>Music Videos</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Post Videos</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Lyrics</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Cover Art</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Demo Section -->
+    <section id="live-demo" class="py-5 bg-primary text-white">
+        <div class="container text-center">
+            <h2 class="display-5 fw-bold mb-4">Try GAMDL Web Right Now!</h2>
+            <p class="lead mb-4">
+                Experience the web interface with our live demo. Note: For actual downloads,
+                you'll need to run the app locally with your Apple Music cookies.
+            </p>
+            <div class="alert alert-light text-dark">
+                <h5><i class="fas fa-info-circle me-2"></i>Live Demo Status</h5>
+                <p class="mb-0">
+                    🚧 <strong>Live demo coming soon!</strong> We're working on deploying the full web application.
+                    For now, you can run GAMDL Web locally using the instructions below.
+                </p>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card bg-light text-dark">
+                        <div class="card-body">
+                            <h5 class="card-title">🎯 Quick Start</h5>
+                            <div class="code-block">
+git clone https://github.com/nyatanvn/gamdl.git<br>
+cd gamdl<br>
+./start.sh<br>
+# Then open http://localhost:5000
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-light text-dark">
+                        <div class="card-body">
+                            <h5 class="card-title">🔧 Manual Setup</h5>
+                            <div class="code-block">
+pip install -r requirements.txt<br>
+pip install -r web_requirements.txt<br>
+python web_app.py
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Installation Section -->
+    <section id="installation" class="py-5 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-5">
+                    <h2 class="display-5 fw-bold">Get Started</h2>
+                    <p class="lead text-muted">Run GAMDL Web on your computer in minutes</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Installation Steps</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>Prerequisites</h6>
+                            <ul>
+                                <li>Python 3.10 or higher</li>
+                                <li>FFmpeg (for audio processing)</li>
+                                <li>Apple Music subscription and cookies</li>
+                            </ul>
+
+                            <h6>Quick Installation (macOS/Linux)</h6>
+                            <div class="code-block">
+# Clone the repository<br>
+git clone https://github.com/nyatanvn/gamdl.git<br>
+cd gamdl<br>
+<br>
+# Run the startup script<br>
+./start.sh
+                            </div>
+
+                            <h6>Manual Installation</h6>
+                            <div class="code-block">
+# Install dependencies<br>
+pip install -r requirements.txt<br>
+pip install -r web_requirements.txt<br>
+<br>
+# Start the web app<br>
+python web_app.py
+                            </div>
+
+                            <h6>Get Apple Music Cookies</h6>
+                            <p>Use one of these browser extensions to export your Apple Music cookies:</p>
+                            <ul>
+                                <li><strong>Firefox:</strong> <a href="https://addons.mozilla.org/addon/export-cookies-txt/" target="_blank">Export Cookies</a></li>
+                                <li><strong>Chrome:</strong> <a href="https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc" target="_blank">Get cookies.txt</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>GAMDL Web Interface</h5>
+                    <p class="mb-0">A user-friendly web frontend for the GAMDL Apple Music downloader.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-2">
+                        <a href="https://github.com/nyatanvn/gamdl" class="text-white" target="_blank">
+                            <i class="fab fa-github me-2"></i>View on GitHub
+                        </a>
+                    </p>
+                    <p class="mb-0 small text-muted">
+                        Built with Flask, Bootstrap, and ❤️ for Apple Music fans
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Add some interactive effects
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate feature cards on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.feature-card').forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(card);
+            });
+        });
+    </script>
+</body>
+</html>

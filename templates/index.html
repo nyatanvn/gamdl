@@ -734,18 +734,60 @@
             });
             
             document.getElementById('metadata-content').innerHTML = html;
+            
+            // Show artist options if artists are present
+            if (data.has_artists) {
+                showArtistOptions();
+            } else {
+                hideArtistOptions();
+            }
         }
 
-        function calculateTotalTracks(metadata) {
-            return metadata.reduce((total, item) => {
-                if (item.actual_tracks !== undefined) {
-                    return total + (typeof item.actual_tracks === 'number' ? item.actual_tracks : 0);
-                } else if (typeof item.estimated_tracks === 'number') {
-                    return total + item.estimated_tracks;
-                } else {
-                    return total + 1; // Default to 1 if unknown
-                }
-            }, 0);
+        function showArtistOptions() {
+            // Check if artist options already exist
+            if (document.getElementById('artist-options-section')) {
+                return;
+            }
+            
+            const metadataPreview = document.getElementById('metadata-preview');
+            const metadataContent = document.getElementById('metadata-content');
+            
+            // Insert artist options after the metadata content
+            const artistOptionsHtml = `
+                <div id="artist-options-section" class="mt-4 p-3 border rounded bg-light">
+                    <h6><i class="fas fa-user-music me-2"></i>Artist Download Options</h6>
+                    <p class="small text-muted mb-3">One or more artist URLs were detected. Please choose what content to download:</p>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="artist_download_type" id="artist_albums" value="albums" checked>
+                        <label class="form-check-label" for="artist_albums">
+                            <strong>Albums</strong> - Download all albums by the artist(s)
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="artist_download_type" id="artist_music_videos" value="music-videos">
+                        <label class="form-check-label" for="artist_music_videos">
+                            <strong>Music Videos</strong> - Download all music videos by the artist(s)
+                        </label>
+                    </div>
+                    
+                    <div class="alert alert-info py-2">
+                        <small><i class="fas fa-info-circle me-1"></i>
+                        <strong>Note:</strong> Artist downloads will be expanded to individual album/music video URLs before downloading.
+                        This ensures compatibility with the web interface.</small>
+                    </div>
+                </div>
+            `;
+            
+            metadataContent.insertAdjacentHTML('afterend', artistOptionsHtml);
+        }
+
+        function hideArtistOptions() {
+            const artistOptions = document.getElementById('artist-options-section');
+            if (artistOptions) {
+                artistOptions.remove();
+            }
         }
 
         function hideMetadataPreview() {
@@ -925,7 +967,11 @@
                 return;
             }
             
-            startDownload(customPath);
+            // Check if artist options are required and selected
+            const artistOptions = document.querySelector('input[name="artist_download_type"]:checked');
+            const artistDownloadType = artistOptions ? artistOptions.value : null;
+            
+            startDownload(customPath, artistDownloadType);
         }
 
         // File upload handling
@@ -1118,7 +1164,7 @@
             resultsDiv.innerHTML = html;
         }
 
-        function startDownload(customPath = null) {
+        function startDownload(customPath = null, artistDownloadType = null) {
             const urls = document.getElementById('urls').value.trim();
             
             if (!urls) {
@@ -1155,6 +1201,11 @@
             // Add custom output path if specified
             if (customPath) {
                 data.output_path = customPath;
+            }
+            
+            // Add artist download type if specified
+            if (artistDownloadType) {
+                data.artist_download_type = artistDownloadType;
             }
             
             fetch('/download', {
@@ -1383,6 +1434,16 @@
             
             // Reset save location
             document.getElementById('save-location').value = '';
+            
+            // Reset artist options
+            const artistOptions = document.querySelectorAll('input[name="artist_download_type"]');
+            artistOptions.forEach(option => {
+                if (option.value === 'albums') {
+                    option.checked = true;
+                } else {
+                    option.checked = false;
+                }
+            });
             
             // Hide progress and downloads
             document.getElementById('download-progress').style.display = 'none';

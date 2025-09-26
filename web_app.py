@@ -124,79 +124,6 @@ def get_metadata_from_urls(urls, cookies_path=None):
         print(f"Error getting metadata: {e}")
         return []
 
-def get_metadata_from_urls(urls, cookies_path=None):
-    """Get real metadata for URLs from Apple Music API using gamdl's own parsing"""
-    try:
-        metadata = []
-        
-        # Initialize Apple Music API
-        if AppleMusicApi and cookies_path and os.path.exists(cookies_path):
-            try:
-                api = AppleMusicApi.from_netscape_cookies(Path(cookies_path))
-            except Exception as e:
-                print(f"Could not initialize Apple Music API with cookies: {e}")
-                api = None
-        else:
-            # Try to initialize without cookies (limited functionality)
-            try:
-                api = AppleMusicApi(storefront="us", media_user_token=None)
-            except Exception as e:
-                print(f"Could not initialize Apple Music API: {e}")
-                api = None
-        
-        if isinstance(urls, str):
-            urls = [url.strip() for url in urls.split('\n') if url.strip()]
-        
-        # Create a temporary downloader instance to use its URL parsing
-        temp_downloader = None
-        if api and Downloader:
-            try:
-                # Create a dummy iTunes API instance
-                temp_itunes_api = ItunesApi() if ItunesApi else None
-                temp_downloader = Downloader(apple_music_api=api, itunes_api=temp_itunes_api)
-            except Exception as e:
-                print(f"Could not create downloader: {e}")
-        
-        for url in urls:
-            try:
-                if temp_downloader:
-                    # Use gamdl's own URL parsing
-                    url_info = temp_downloader.parse_url_info(url)
-                    if url_info:
-                        real_metadata = get_real_metadata_with_gamdl(api, url_info, url)
-                        if real_metadata:
-                            metadata.append(real_metadata)
-                        else:
-                            # Fallback to basic URL parsing
-                            basic_info = parse_apple_music_url(url)
-                            metadata.append(basic_info)
-                    else:
-                        # URL not recognized by gamdl
-                        basic_info = parse_apple_music_url(url)
-                        basic_info['error'] = 'URL format not recognized'
-                        metadata.append(basic_info)
-                else:
-                    # No API available, use basic parsing
-                    basic_info = parse_apple_music_url(url)
-                    basic_info['note'] = 'Limited info - cookies not provided or API unavailable'
-                    metadata.append(basic_info)
-                    
-            except Exception as e:
-                metadata.append({
-                    'url': url,
-                    'type': 'error',
-                    'title': f'Error processing URL: {str(e)}',
-                    'id': 'error',
-                    'estimated_tracks': 0,
-                    'tracks': []
-                })
-        
-        return metadata
-        
-    except Exception as e:
-        print(f"Error getting metadata: {e}")
-        return []
-
 def get_real_metadata_with_gamdl(api, url_info, url):
     """Get real metadata from Apple Music API using gamdl's structures"""
     try:
@@ -454,6 +381,53 @@ def run_gamdl_command(download_id, urls, options):
         download_progress[download_id]['status'] = 'running'
         download_progress[download_id]['current_track'] = 'Building command...'
         
+        # Handle artist URLs by expanding them
+        processed_urls = []
+        if isinstance(urls, str):
+            url_list = [url.strip() for url in urls.split('\n') if url.strip()]
+        else:
+            url_list = urls
+        
+        # Initialize API for artist expansion
+        api = None
+        cookies_path = options.get('cookies_path')
+        if cookies_path and os.path.exists(cookies_path):
+            try:
+                api = AppleMusicApi.from_netscape_cookies(Path(cookies_path))
+            except Exception as e:
+                print(f"Could not initialize API for artist expansion: {e}")
+        
+        for url in url_list:
+            if 'artist' in url and api:
+                # Extract artist ID from URL
+                artist_id_match = re.search(r'artist/([^/]+)/(\d+)', url)
+                if artist_id_match:
+                    artist_id = artist_id_match.group(2)
+                    try:
+                        artist_data = api.get_artist(artist_id)
+                        download_type = options.get('artist_download_type', 'albums')
+                        
+                        if download_type == 'albums' and 'albums' in artist_data.get('relationships', {}):
+                            # Add all album URLs
+                            for album in artist_data['relationships']['albums']['data']:
+                                album_url = f"https://music.apple.com/album/{album['id']}"
+                                processed_urls.append(album_url)
+                        elif download_type == 'music-videos' and 'music-videos' in artist_data.get('relationships', {}):
+                            # Add all music video URLs
+                            for mv in artist_data['relationships']['music-videos']['data']:
+                                mv_url = f"https://music.apple.com/music-video/{mv['id']}"
+                                processed_urls.append(mv_url)
+                        else:
+                            # Fallback to original URL if expansion fails
+                            processed_urls.append(url)
+                    except Exception as e:
+                        print(f"Error expanding artist URL {url}: {e}")
+                        processed_urls.append(url)
+                else:
+                    processed_urls.append(url)
+            else:
+                processed_urls.append(url)
+        
         # Build command
         cmd = ['python3', '-m', 'gamdl']
         
@@ -501,10 +475,8 @@ def run_gamdl_command(download_id, urls, options):
         if options.get('disable_music_video_skip'):
             cmd.append('--disable-music-video-skip')
         
-        # Add URLs
-        if isinstance(urls, str):
-            urls = [url.strip() for url in urls.split('\n') if url.strip()]
-        cmd.extend(urls)
+        # Add processed URLs
+        cmd.extend(processed_urls)
         
         active_downloads[download_id] = {
             'status': 'running',
@@ -613,12 +585,16 @@ def preview_metadata():
         
         metadata = get_metadata_from_urls(urls, cookies_path)
         
+        # Check if any artist URLs are present
+        has_artists = any(item.get('type') == 'artist' for item in metadata)
+        
         return jsonify({
             'metadata': metadata,
             'total_estimated_tracks': sum(
                 int(item['estimated_tracks']) if isinstance(item['estimated_tracks'], int) 
                 else 1 for item in metadata
-            )
+            ),
+            'has_artists': has_artists
         })
         
     except Exception as e:
@@ -634,6 +610,19 @@ def download():
         
         if not urls:
             return jsonify({'error': 'No URLs provided'}), 400
+        
+        # Check for artist URLs and validate options
+        url_list = [url.strip() for url in urls.split('\n') if url.strip()]
+        has_artists = any('artist' in url for url in url_list)
+        
+        if has_artists:
+            artist_download_type = data.get('artist_download_type')
+            if not artist_download_type:
+                return jsonify({
+                    'error': 'Artist URLs detected. Please specify what to download from artists.',
+                    'requires_artist_options': True,
+                    'artist_options': ['albums', 'music-videos']
+                }), 400
         
         # Generate unique download ID
         download_id = str(uuid.uuid4())
@@ -676,6 +665,10 @@ def download():
                 'synced_lyrics_only': data.get('synced_lyrics_only', False),
                 'disable_music_video_skip': data.get('disable_music_video_skip', False)
             }
+        
+        # Add artist download options if present
+        if has_artists and 'artist_download_type' in data:
+            options['artist_download_type'] = data['artist_download_type']
         
         # Create unique download folder immediately
         download_folder = create_download_folder(base_output_path, metadata_list, download_id)
@@ -1136,4 +1129,4 @@ def test_cookies():
         return jsonify({'error': str(e), 'test_results': [f'❌ Test failed: {str(e)}']}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='127.0.0.1', port=5000)

@@ -319,6 +319,12 @@ def load_config_file(
     default=downloader_sig.parameters["truncate"].default,
     help="Maximum length of the file/folder names.",
 )
+@click.option(
+    "--database-path",
+    type=Path,
+    default=downloader_sig.parameters["database_path"].default,
+    help="Path to the downloaded media database file.",
+)
 # DownloaderSong specific options
 @click.option(
     "--codec-song",
@@ -401,6 +407,7 @@ def main(
     exclude_tags: list[str],
     cover_size: int,
     truncate: int,
+    database_path: Path,
     codec_song: SongCodec,
     synced_lyrics_format: SyncedLyricsFormat,
     codec_music_video: list[MusicVideoCodec],
@@ -471,6 +478,7 @@ def main(
         exclude_tags,
         cover_size,
         truncate,
+        database_path,
         log_level in ("WARNING", "ERROR"),
     )
 
@@ -605,23 +613,26 @@ def main(
                     continue
 
                 if media_metadata["type"] in {"songs", "library-songs"}:
-                    downloader_song.download(
+                    for _ in downloader_song.download(
                         media_metadata=media_metadata,
                         playlist_attributes=download_queue.playlist_attributes,
                         playlist_track=download_index,
-                    )
+                    ):
+                        pass
 
                 if media_metadata["type"] in {"music-videos", "library-music-videos"}:
-                    downloader_music_video.download(
+                    for _ in downloader_music_video.download(
                         media_metadata=media_metadata,
                         playlist_attributes=download_queue.playlist_attributes,
                         playlist_track=download_index,
-                    )
+                    ):
+                        pass
 
                 if media_metadata["type"] == "uploaded-videos":
-                    downloader_post.download(
+                    for _ in downloader_post.download(
                         media_metadata=media_metadata,
-                    )
+                    ):
+                        pass
             except KeyboardInterrupt:
                 exit(0)
             except (

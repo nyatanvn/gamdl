@@ -23,6 +23,7 @@ from pywidevine import PSSH, Cdm, Device
 from yt_dlp import YoutubeDL
 
 from .apple_music_api import AppleMusicApi
+from .database import Database
 from .enums import CoverFormat, DownloadMode, MediaFileFormat, RemuxMode
 from .hardcoded_wvd import HARDCODED_WVD
 from .itunes_api import ItunesApi
@@ -47,7 +48,7 @@ class Downloader:
         r"/(?P<storefront>[a-z]{2})"
         r"/(?P<type>artist|album|playlist|song|music-video|post)"
         r"(?:/(?P<slug>[^\s/]+))?"
-        r"/(?P<id>[0-9]+|pl\.[0-9a-z]{32}|pl\.u-[a-zA-Z0-9]{15})"
+        r"/(?P<id>[0-9]+|pl\.[0-9a-z]{32}|pl\.u-[a-zA-Z0-9]+)"
         r"(?:\?i=(?P<sub_id>[0-9]+))?"
         r")|("
         r"(?:/(?P<library_storefront>[a-z]{2}))?"
@@ -90,6 +91,7 @@ class Downloader:
         exclude_tags: list[str] = None,
         cover_size: int = 1200,
         truncate: int = None,
+        database_path: Path = None,
         silent: bool = False,
         skip_processing: bool = False,
     ):
@@ -121,12 +123,14 @@ class Downloader:
         self.exclude_tags = exclude_tags
         self.cover_size = cover_size
         self.truncate = truncate
+        self.database_path = database_path
         self.silent = silent
         self.skip_processing = skip_processing
         self._set_temp_path()
         self._set_exclude_tags()
         self._set_binaries_path_full()
         self._set_truncate()
+        self._set_database()
         self._set_subprocess_additional_args()
 
     def _set_temp_path(self):
@@ -145,6 +149,12 @@ class Downloader:
     def _set_truncate(self):
         if self.truncate is not None:
             self.truncate = None if self.truncate < 4 else self.truncate
+
+    def _set_database(self):
+        if self.database_path is not None:
+            self.database = Database(self.database_path)
+        else:
+            self.database = None
 
     def _set_subprocess_additional_args(self):
         if self.silent:
@@ -346,6 +356,18 @@ class Downloader:
         media_metadata: dict,
     ) -> bool:
         return bool(media_metadata["attributes"].get("playParams"))
+
+    def get_database_final_path(self, media_id: str) -> Path | None:
+        if self.database is None:
+            return
+
+        final_path_database = self.database.get_media(media_id)
+        if (
+            final_path_database is not None
+            and final_path_database.exists()
+            and not self.overwrite
+        ):
+            return final_path_database
 
     def get_playlist_tags(
         self,
@@ -673,12 +695,31 @@ class Downloader:
             encoding="utf8",
         )
 
-    def cleanup_temp_path(self, override_skip_processing_check: bool = False) -> None:
-        if self.skip_processing and not override_skip_processing_check:
-            return
-
+    def cleanup_temp_path(self) -> None:
         if self.temp_path_generated.exists():
             shutil.rmtree(self.temp_path_generated)
+
+    def _final_processing_wrapper(
+        self,
+        func,
+        *args,
+        **kwargs,
+    ) -> typing.Generator[DownloadInfo, None, None]:
+        exception = None
+        download_info = None
+        try:
+            for download_info in func(*args, **kwargs):
+                yield download_info
+        except Exception as e:
+            exception = e
+        finally:
+            if download_info is not None and isinstance(download_info, DownloadInfo):
+                self._final_processing(
+                    download_info,
+                )
+
+            if exception is not None:
+                raise exception
 
     def _final_processing(
         self,
@@ -687,11 +728,20 @@ class Downloader:
         if self.skip_processing:
             return
 
-        colored_media_id = color_text(download_info.media_id, colorama.Style.DIM)
+        if download_info.media_id:
+            colored_media_id = color_text(
+                download_info.media_id,
+                colorama.Style.DIM,
+            )
+        else:
+            colored_media_id = color_text(
+                "Unknown",
+                colorama.Style.DIM,
+            )
 
         if download_info.staged_path:
             logger.debug(
-                f"[{colored_media_id}] Applying tags to {download_info.staged_path}"
+                f'[{colored_media_id}] Applying tags to "{download_info.staged_path}"'
             )
             self.apply_tags(
                 download_info.staged_path,
@@ -706,6 +756,15 @@ class Downloader:
                 download_info.final_path,
             )
             logger.info(f"[{colored_media_id}] Download completed successfully")
+
+            if self.database is not None:
+                logger.debug(
+                    f'[{colored_media_id}] Adding entry to database at "{self.database_path}"'
+                )
+                self.database.add_media(
+                    download_info.media_id,
+                    download_info.final_path,
+                )
 
         if (
             download_info.cover_path and not self.save_cover
@@ -742,6 +801,7 @@ class Downloader:
                 download_info.synced_lyrics_path,
                 download_info.lyrics.synced,
             )
+
         if download_info.playlist_tags and self.save_playlist:
             playlist_file_path = self.get_playlist_file_path(
                 download_info.playlist_tags
@@ -754,3 +814,5 @@ class Downloader:
                 download_info.final_path,
                 download_info.playlist_tags.playlist_track,
             )
+
+        self.cleanup_temp_path()

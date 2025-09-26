@@ -193,6 +193,7 @@ Config file values can be overridden using command-line arguments.
 | `--exclude-tags` / `exclude_tags`                               | Comma-separated tags to exclude.                                             | `null`                                         |
 | `--cover-size` / `cover_size`                                   | Cover size.                                                                  | `1200`                                         |
 | `--truncate` / `truncate`                                       | Maximum length of the file/folder names.                                     | `null`                                         |
+| `--database-path` / `database_path`                             | Path to the downloaded media database file.                                  | `null`                                         |
 | `--codec-song` / `codec_song`                                   | Song codec.                                                                  | `aac-legacy`                                   |
 | `--synced-lyrics-format` / `synced_lyrics_format`               | Synced lyrics format.                                                        | `lrc`                                          |
 | `--codec-music-video` / `codec_music_video`                     | Comma-separated music video codec priority.                                  | `h264,h265`                                    |
@@ -309,6 +310,11 @@ The following variables can be used in the template folders/files and/or in the 
 - `png`: Lossless format.
 - `raw`: Raw cover without processing (requires `save_cover` to save separately).
 
+### Database path
+
+You can specify any path for storing a database file of downloaded media.
+This is useful if you want to avoid waiting for Gamdl to fetch metadata for checking if a media item has already been downloaded.
+
 ## Embedding
 
 Gamdl can be used as a library in Python scripts. Here's a basic example of downloading a song by its ID:
@@ -330,5 +336,7 @@ downloader = Downloader(
 downloader.set_cdm()
 downloader_song = DownloaderSong(downloader=downloader)
 
-downloader_song.download(media_id="1624945512")
+for download_info in downloader_song.download(media_id="1624945512"):
+    # Process download_info as needed
+    pass
 ```

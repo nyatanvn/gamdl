@@ -2,6 +2,8 @@
 
 A command-line app for downloading Apple Music songs, music videos and post videos.
 
+https://nyatanvn.github.io/gamdl/
+
 **Join our Discord Server:** <https://discord.gg/aBjMEZ9tnq>
 
 ## Features
